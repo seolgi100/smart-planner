@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEvents } from '../hooks/useEvents';
 import EventForm from '../components/events/EventForm';
 import CategoryBadge from '../components/common/CategoryBadge';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import { formatDate, getDday, formatHours, isOverdue } from '../utils/dateUtils';
 import type { EventFormData } from '../types';
 
@@ -14,6 +15,7 @@ const EventDetailPage = () => {
 
     const event = events.find((e) => e.id === id);
     const [isEditing, setIsEditing] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     if (!event) {
         return (
@@ -38,7 +40,6 @@ const EventDetailPage = () => {
     };
 
     const handleDelete = () => {
-        if (!window.confirm('이 일정을 삭제할까요?')) return;
         removeEvent(event.id);
         navigate('/events');
     };
@@ -90,7 +91,7 @@ const EventDetailPage = () => {
                             수정
                         </button>
                         <button
-                            onClick={handleDelete}
+                            onClick={() => setShowConfirm(true)}
                             className="text-xs text-red-400 hover:underline"
                         >
                             삭제
@@ -160,6 +161,15 @@ const EventDetailPage = () => {
                     </div>
                 )}
             </div>
+
+            {showConfirm && (
+                <ConfirmDialog
+                    message="이 일정을 삭제할까요?"
+                    subMessage={`"${event.title}"`}
+                    onConfirm={handleDelete}
+                    onCancel={() => setShowConfirm(false)}
+                />
+            )}
         </div>
     );
 };

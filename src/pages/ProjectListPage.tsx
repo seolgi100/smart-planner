@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProjects } from '../hooks/useProjects';
 import ProjectCard from '../components/projects/ProjectCard';
 import EmptyState from '../components/common/EmptyState';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import type { ProjectFormData } from '../types';
 
 const PRIORITY_OPTIONS = [
@@ -20,6 +21,7 @@ const ProjectListPage = () => {
 
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
     const handleSubmit = () => {
         if (!title.trim() || !dueDate) return;
@@ -67,6 +69,7 @@ const ProjectListPage = () => {
 
     const handleBulkDelete = () => {
         bulkRemove(Array.from(selectedIds));
+        setShowBulkDeleteConfirm(false);
         exitSelectionMode();
     };
 
@@ -229,7 +232,7 @@ const ProjectListPage = () => {
                         모두 완료 ({selectedIds.size}개)
                     </button>
                     <button
-                        onClick={handleBulkDelete}
+                        onClick={() => setShowBulkDeleteConfirm(true)}
                         className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors"
                     >
                         모두 삭제 ({selectedIds.size}개)
@@ -239,6 +242,15 @@ const ProjectListPage = () => {
 
             {/*하단 액션바 공간 확보*/}
             {selectionMode && selectedIds.size > 0 && <div className="h-16" />}
+
+            {showBulkDeleteConfirm && (
+                <ConfirmDialog
+                    message={`프로젝트 ${selectedIds.size}개를 삭제할까요?`}
+                    subMessage="삭제된 프로젝트는 복구할 수 없습니다."
+                    onConfirm={handleBulkDelete}
+                    onCancel={() => setShowBulkDeleteConfirm(false)}
+                />
+            )}
         </div>
     );
 };

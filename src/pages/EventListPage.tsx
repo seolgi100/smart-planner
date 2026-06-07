@@ -4,6 +4,7 @@ import EventCard from '../components/events/EventCard';
 import EventForm from '../components/events/EventForm';
 import SortFilterBar from '../components/events/SortFilterBar';
 import EmptyState from '../components/common/EmptyState';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import type { EventFormData } from '../types';
 
 const EventListPage = () => {
@@ -22,6 +23,7 @@ const EventListPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
     const handleSubmit = (data: EventFormData) => {
         addEvent(data);
@@ -56,6 +58,7 @@ const EventListPage = () => {
 
     const handleBulkDelete = () => {
         bulkRemove(Array.from(selectedIds));
+        setShowBulkDeleteConfirm(false);
         exitSelectionMode();
     };
 
@@ -157,7 +160,7 @@ const EventListPage = () => {
                         모두 완료 ({selectedIds.size}개)
                     </button>
                     <button
-                        onClick={handleBulkDelete}
+                        onClick={() => setShowBulkDeleteConfirm(true)}
                         className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors"
                     >
                         모두 삭제 ({selectedIds.size}개)
@@ -167,6 +170,15 @@ const EventListPage = () => {
 
             {/*하단 액션바 공간 확보*/}
             {selectionMode && selectedIds.size > 0 && <div className="h-16" />}
+
+            {showBulkDeleteConfirm && (
+                <ConfirmDialog
+                    message={`일정 ${selectedIds.size}개를 삭제할까요?`}
+                    subMessage="삭제된 일정은 복구할 수 없습니다."
+                    onConfirm={handleBulkDelete}
+                    onCancel={() => setShowBulkDeleteConfirm(false)}
+                />
+            )}
         </div>
     );
 };

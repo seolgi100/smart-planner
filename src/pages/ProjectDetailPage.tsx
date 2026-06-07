@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProjects } from '../hooks/useProjects';
 import ProjectProgress from '../components/projects/ProjectProgress';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import { formatDate, getDday, isOverdue } from '../utils/dateUtils';
 import type { ProjectTask } from '../types';
 
@@ -14,6 +15,7 @@ const ProjectDetailPage = () => {
     const project = projects.find((p) => p.id === id);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editTitle, setEditTitle] = useState('');
+    const [showConfirm, setShowConfirm] = useState(false);
 
     if (!project) {
         return (
@@ -54,7 +56,6 @@ const ProjectDetailPage = () => {
     };
 
     const handleDelete = () => {
-        if (!window.confirm('이 프로젝트를 삭제할까요?')) return;
         removeProject(project.id);
         navigate('/projects');
     };
@@ -120,7 +121,7 @@ const ProjectDetailPage = () => {
                                 수정
                             </button>
                             <button
-                                onClick={handleDelete}
+                                onClick={() => setShowConfirm(true)}
                                 className="text-xs text-red-400 hover:underline"
                             >
                                 삭제
@@ -160,6 +161,15 @@ const ProjectDetailPage = () => {
                     />
                 </div>
             </div>
+
+            {showConfirm && (
+                <ConfirmDialog
+                    message="이 프로젝트를 삭제할까요?"
+                    subMessage={`"${project.title}"`}
+                    onConfirm={handleDelete}
+                    onCancel={() => setShowConfirm(false)}
+                />
+            )}
         </div>
     );
 };

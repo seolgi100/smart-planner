@@ -64,3 +64,31 @@ export interface Project {
 
 //프로젝트 생성/수정 폼 타입
 export type ProjectFormData = Omit<Project, 'id' | 'createdAt'>;
+
+// ─── 루틴 ───────────────────────────────────────────────
+export type RoutineCategory = 'school' | 'work' | 'parttime' | 'exercise' | 'other';
+
+// daily: 매일 / weekly: 특정 요일 (repeatDays = [0-6]) / monthly: 매월 (repeatDays = [dayOfMonth])
+export type RepeatType = 'daily' | 'weekly' | 'monthly';
+
+export interface DaySchedule {
+  startTime?: string;  // "HH:MM"
+  endTime?: string;    // "HH:MM"
+}
+
+export interface Routine {
+  id: string;
+  title: string;
+  category: RoutineCategory;
+  repeatType: RepeatType;
+  repeatDays: number[];   // weekly: 요일 인덱스(0=일~6=토), monthly: [일자]
+  startTime?: string;     // daily/monthly 용 공통 시작 시간
+  endTime?: string;       // daily/monthly 용 공통 종료 시간
+  daySchedules?: Record<number, DaySchedule>;  // weekly: 요일별 개별 시간 (키 = weekday index)
+  endDate?: string;       // 루틴 종료일 (선택, 이 날 이후엔 캘린더에 표시 안 됨)
+  isActive: boolean;
+  createdAt: string;
+  description?: string;
+}
+
+export type RoutineFormData = Omit<Routine, 'id' | 'createdAt'>;

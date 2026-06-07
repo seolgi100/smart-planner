@@ -12,7 +12,6 @@ const EventListPage = () => {
         sortBy,
         filterCategory,
         addEvent,
-        editEvent,
         removeEvent,
         toggleComplete,
         setSortBy,

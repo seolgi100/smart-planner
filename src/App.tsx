@@ -8,7 +8,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/smart-planner/">
       <div className="min-h-screen bg-gray-50">
         <Header />
         <main>

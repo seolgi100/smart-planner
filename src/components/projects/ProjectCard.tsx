@@ -4,8 +4,10 @@ import { formatDate, isUrgent, isOverdue, getDday } from '../../utils/dateUtils'
 
 interface Props {
     project: Project & { progress: number };
-    onToggleComplete: (id: string) => void;
-    onDelete: (id: string) => void;
+    onDelete?: (id: string) => void;
+    selectionMode?: boolean;
+    isSelected?: boolean;
+    onSelect?: (id: string) => void;
 }
 
 const PRIORITY_MAP = {
@@ -14,37 +16,56 @@ const PRIORITY_MAP = {
     low: { label: '낮음', className: 'text-gray-400' },
 };
 
-const ProjectCard = ({ project, onToggleComplete, onDelete }: Props) => {
+const ProjectCard = ({ project, onDelete, selectionMode, isSelected, onSelect }: Props) => {
     const navigate = useNavigate();
     const urgent = isUrgent(project.dueDate);
     const overdue = isOverdue(project.dueDate, project.isCompleted);
     const dday = getDday(project.dueDate);
 
+    const handleCardClick = () => {
+        if (selectionMode) {
+            onSelect?.(project.id);
+        } else {
+            navigate(`/projects/${project.id}`);
+        }
+    };
+
     return (
         <div
-            className={`bg-white rounded-xl border p-4 shadow-sm transition-all ${project.isCompleted
+            onClick={handleCardClick}
+            className={`bg-white rounded-xl border p-4 shadow-sm transition-all cursor-pointer ${
+                selectionMode && isSelected
+                    ? 'border-indigo-400 bg-indigo-50/50'
+                    : project.isCompleted
                     ? 'opacity-50 border-gray-200'
                     : overdue
-                        ? 'border-red-300'
-                        : urgent
-                            ? 'border-orange-300'
-                            : 'border-gray-200 hover:border-indigo-300'
-                }`}
+                    ? 'border-red-300'
+                    : urgent
+                    ? 'border-orange-300'
+                    : 'border-gray-200 hover:border-indigo-300'
+            }`}
         >
             <div className="flex items-start justify-between gap-2">
-                {/*왼쪽: 체크박스 + 제목*/}
+                {/*왼쪽: 선택 체크박스(선택모드) 또는 완료 상태 표시 + 제목*/}
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <input
-                        type="checkbox"
-                        checked={project.isCompleted}
-                        onChange={() => onToggleComplete(project.id)}
-                        className="mt-0.5 w-4 h-4 accent-indigo-500 cursor-pointer flex-shrink-0"
-                    />
-                    <div
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                        <p className={`font-medium text-sm truncate ${project.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                    {selectionMode ? (
+                        <input
+                            type="checkbox"
+                            checked={!!isSelected}
+                            onChange={() => onSelect?.(project.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-0.5 w-4 h-4 accent-indigo-500 cursor-pointer flex-shrink-0"
+                        />
+                    ) : (
+                        <span className={`mt-1 w-3 h-3 rounded-full flex-shrink-0 border-2 ${
+                            project.isCompleted ? 'bg-indigo-400 border-indigo-400' : 'border-gray-300'
+                        }`} />
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                        <p className={`font-medium text-sm truncate ${
+                            project.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'
+                        }`}>
                             {project.title}
                         </p>
                         {project.priority && (
@@ -55,23 +76,37 @@ const ProjectCard = ({ project, onToggleComplete, onDelete }: Props) => {
                     </div>
                 </div>
 
-                {/*오른쪽: D-day + 삭제*/}
-                <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <span className={`text-xs font-bold ${overdue ? 'text-red-500' : urgent ? 'text-orange-500' : 'text-indigo-500'
+                {/*오른쪽: D-day + 삭제 (선택모드 아닐 때만)*/}
+                {!selectionMode && (
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span className={`text-xs font-bold ${
+                            overdue ? 'text-red-500' : urgent ? 'text-orange-500' : 'text-indigo-500'
                         }`}>
+                            {overdue ? '마감 지남' : dday}
+                        </span>
+                        {onDelete && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
+                                className="text-gray-300 hover:text-red-400 text-xs transition-colors"
+                            >
+                                삭제
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/*선택모드: D-day만 표시*/}
+                {selectionMode && (
+                    <span className={`text-xs font-bold flex-shrink-0 ${
+                        overdue ? 'text-red-500' : urgent ? 'text-orange-500' : 'text-indigo-500'
+                    }`}>
                         {overdue ? '마감 지남' : dday}
                     </span>
-                    <button
-                        onClick={() => onDelete(project.id)}
-                        className="text-gray-300 hover:text-red-400 text-xs transition-colors"
-                    >
-                        삭제
-                    </button>
-                </div>
+                )}
             </div>
 
             {/*진행률 바*/}
-            <div className="mt-3 ml-7">
+            <div className="mt-3 ml-6">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
                     <span>진행률</span>
                     <span>{project.progress}%</span>

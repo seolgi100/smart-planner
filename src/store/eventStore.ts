@@ -12,6 +12,8 @@ interface EventStore {
     editEvent: (id: string, formData: Partial<EventFormData>) => void;
     removeEvent: (id: string) => void;
     toggleComplete: (id: string) => void;
+    bulkMarkComplete: (ids: string[]) => void;
+    bulkRemove: (ids: string[]) => void;
     setSortBy: (sort: SortOption) => void;
     setFilterCategory: (category: EventCategory | 'all') => void;
 }
@@ -51,6 +53,29 @@ export const useEventStore = create<EventStore>((set, get) => ({
         const updated = eventService.updateEvent(id, { isCompleted: !event.isCompleted });
         set((state) => ({
             events: state.events.map((e) => (e.id === id ? updated : e)),
+        }));
+    },
+
+    bulkMarkComplete: (ids) => {
+        const idsSet = new Set(ids);
+        const updates: Event[] = [];
+        get().events.forEach((e) => {
+            if (idsSet.has(e.id) && !e.isCompleted) {
+                updates.push(eventService.updateEvent(e.id, { isCompleted: true }));
+            }
+        });
+        if (updates.length === 0) return;
+        const updatedMap = new Map(updates.map((e) => [e.id, e]));
+        set((state) => ({
+            events: state.events.map((e) => updatedMap.get(e.id) ?? e),
+        }));
+    },
+
+    bulkRemove: (ids) => {
+        const idsSet = new Set(ids);
+        ids.forEach((id) => eventService.deleteEvent(id));
+        set((state) => ({
+            events: state.events.filter((e) => !idsSet.has(e.id)),
         }));
     },
 

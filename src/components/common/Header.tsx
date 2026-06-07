@@ -10,19 +10,30 @@ const Header = () => {
     const { pathname } = useLocation();
 
     return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-                <Link to="/" className="text-lg font-bold text-indigo-600 tracking-tight">
-                    Smart Planner
+        <header className="sticky top-0 z-50 bg-white border-b border-indigo-100 shadow-sm">
+            <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+                {/*로고*/}
+                <Link to="/" className="flex flex-col leading-tight">
+                    <span
+                        className="text-xl font-bold text-indigo-700 tracking-wide"
+                        style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                        Smart Planner
+                    </span>
+                    <span className="text-[10px] text-indigo-300 tracking-[0.2em] uppercase">
+                        Your Personal Assistant
+                    </span>
                 </Link>
+
+                {/*네비게이션*/}
                 <nav className="flex gap-1">
                     {NAV_ITEMS.map(({ path, label }) => (
                         <Link
                             key={path}
                             to={path}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === path
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${pathname === path
+                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                                    : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50'
                                 }`}
                         >
                             {label}

@@ -13,6 +13,8 @@ export const useEvents = () => {
         editEvent,
         removeEvent,
         toggleComplete,
+        bulkMarkComplete,
+        bulkRemove,
         setSortBy,
         setFilterCategory,
     } = useEventStore();
@@ -55,6 +57,8 @@ export const useEvents = () => {
         editEvent,
         removeEvent,
         toggleComplete,
+        bulkMarkComplete,
+        bulkRemove,
         setSortBy,
         setFilterCategory,
     };

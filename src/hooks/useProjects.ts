@@ -9,6 +9,8 @@ export const useProjects = () => {
         editProject,
         removeProject,
         toggleComplete,
+        bulkMarkComplete,
+        bulkRemove,
     } = useProjectStore();
 
     useEffect(() => {
@@ -31,5 +33,7 @@ export const useProjects = () => {
         editProject,
         removeProject,
         toggleComplete,
+        bulkMarkComplete,
+        bulkRemove,
     };
 };

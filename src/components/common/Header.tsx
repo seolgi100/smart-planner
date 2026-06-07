@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
     { path: '/', label: '홈' },
+    { path: '/calendar', label: '캘린더' },
     { path: '/events', label: '일정' },
     { path: '/projects', label: '프로젝트' },
 ];

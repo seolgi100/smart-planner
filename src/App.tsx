@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/common/Header';
 import HomePage from './pages/HomePage';
+import CalendarPage from './pages/CalendarPage';
 import EventListPage from './pages/EventListPage';
 import EventDetailPage from './pages/EventDetailPage';
 import ProjectListPage from './pages/ProjectListPage';
@@ -14,6 +15,7 @@ const App = () => {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/events" element={<EventListPage />} />
             <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/projects" element={<ProjectListPage />} />

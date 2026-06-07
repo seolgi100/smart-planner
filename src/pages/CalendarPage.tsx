@@ -12,6 +12,8 @@ import {
     isSameDay,
     isSameMonth,
     isToday,
+    isWithinInterval,
+    startOfDay,
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useEventStore } from '../store/eventStore';
@@ -29,6 +31,47 @@ const eventColor = (event: Event): string => {
     if (isOverdue(event.dueDate, event.isCompleted)) return 'bg-red-400';
     if (isUrgent(event.dueDate)) return 'bg-orange-400';
     return 'bg-indigo-400';
+};
+
+// 이벤트가 특정 날에 해당하는지 (단일일 또는 여러 날 범위)
+const isEventOnDay = (event: Event, day: Date): boolean => {
+    if (event.startDate) {
+        return isWithinInterval(startOfDay(day), {
+            start: startOfDay(new Date(event.startDate)),
+            end: startOfDay(new Date(event.dueDate)),
+        });
+    }
+    return isSameDay(new Date(event.dueDate), day);
+};
+
+// 여러 날 이벤트 바의 스타일 — 셀 경계에서 이어지도록 음수 마진 사용
+const eventBarCls = (event: Event, day: Date, col: number, inMonth: boolean): string => {
+    const color = eventColor(event);
+    const opacity = inMonth ? '' : 'opacity-40';
+
+    if (!event.startDate) {
+        return `h-1.5 rounded-full ${color} ${opacity}`;
+    }
+
+    const isStart = isSameDay(startOfDay(new Date(event.startDate)), startOfDay(day));
+    const isEnd   = isSameDay(startOfDay(new Date(event.dueDate)),   startOfDay(day));
+    const atLeft  = col === 0;   // 주 첫째 칸
+    const atRight = col === 6;   // 주 마지막 칸
+
+    const roundL = isStart || atLeft;
+    const roundR = isEnd   || atRight;
+    const extL   = !isStart && !atLeft;   // 왼쪽으로 연장
+    const extR   = !isEnd   && !atRight;  // 오른쪽으로 연장
+
+    return [
+        'h-1.5',
+        color,
+        opacity,
+        roundL ? 'rounded-l-full' : '',
+        roundR ? 'rounded-r-full' : '',
+        extL   ? '-ml-2'          : '',
+        extR   ? '-mr-2'          : '',
+    ].filter(Boolean).join(' ');
 };
 
 const CalendarPage = () => {
@@ -51,8 +94,16 @@ const CalendarPage = () => {
         return eachDayOfInterval({ start, end });
     }, [currentMonth]);
 
+    // 여러 날 이벤트를 먼저, 그 다음 단일 이벤트 — 시작일 기준 정렬 (셀 간 순서 일관성 유지)
     const getEventsForDay = (day: Date): Event[] =>
-        events.filter((e) => isSameDay(new Date(e.dueDate), day));
+        events
+            .filter((e) => isEventOnDay(e, day))
+            .sort((a, b) => {
+                const aDate = a.startDate ?? a.dueDate;
+                const bDate = b.startDate ?? b.dueDate;
+                if (aDate !== bDate) return aDate < bDate ? -1 : 1;
+                return a.dueDate < b.dueDate ? -1 : 1;
+            });
 
     const getRoutinesForDay = (day: Date): Routine[] =>
         routines.filter((r) => isRoutineOnDay(r, day));
@@ -146,7 +197,7 @@ const CalendarPage = () => {
                             <button
                                 key={day.toISOString()}
                                 onClick={() => handleSelectDate(day)}
-                                className={`min-h-[80px] p-2 text-left transition-colors ${
+                                className={`min-h-[80px] p-2 text-left transition-colors overflow-visible ${
                                     !isLastRow ? 'border-b' : ''
                                 } ${col < 6 ? 'border-r' : ''} border-gray-100 ${
                                     selected ? 'bg-indigo-50' : 'hover:bg-gray-50'
@@ -170,11 +221,12 @@ const CalendarPage = () => {
                                     {format(day, 'd')}
                                 </span>
 
+                                {/* 이벤트 바 — 여러 날은 셀 경계에서 이어짐 */}
                                 <div className="mt-1 flex flex-col gap-px">
                                     {shownEvents.map((e) => (
                                         <div
                                             key={e.id}
-                                            className={`h-1.5 rounded-full ${eventColor(e)} ${!inMonth ? 'opacity-40' : ''}`}
+                                            className={eventBarCls(e, day, col, inMonth)}
                                         />
                                     ))}
                                     {remainingEvents > 0 && (
@@ -303,10 +355,17 @@ const CalendarPage = () => {
                                             </p>
                                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                 <CategoryBadge category={event.category} />
-                                                {event.estimatedHours && (
+                                                {/* 여러 날 일정이면 기간 표시 */}
+                                                {event.startDate ? (
                                                     <span className="text-xs text-gray-400">
-                                                        {event.estimatedHours}시간
+                                                        {formatDate(event.startDate)} ~ {formatDate(event.dueDate)}
                                                     </span>
+                                                ) : (
+                                                    event.estimatedHours && (
+                                                        <span className="text-xs text-gray-400">
+                                                            {event.estimatedHours}시간
+                                                        </span>
+                                                    )
                                                 )}
                                             </div>
                                         </div>
@@ -338,7 +397,6 @@ const CalendarPage = () => {
                     <div className="flex flex-col gap-2">
                         {selectedDayRoutines.map((routine) => {
                             const cat = CATEGORY_CONFIG[routine.category];
-                            // 해당 요일의 시간 정보
                             const weekday = selectedDate.getDay();
                             const sched = getDaySchedule(routine, weekday);
                             const timeStr = formatTimeRange(sched);
